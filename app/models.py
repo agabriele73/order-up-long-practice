@@ -21,3 +21,45 @@ class Employee(db.Model, UserMixin):  # Your class definition
 
     def check_password(self, password):
         return check_password_hash(self.password, password)
+
+class Menu(db.Model):
+    __tablename__ = 'menus'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), nullable=False)
+
+    items = db.relationship("MenuItem", back_populates='menus')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "items": { item.id: item.to_dict() for item in self.items }
+        }
+
+class MenuItem(db.Model):
+    __tablename__ = 'menu_items'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    type = db.Column(db.Integer, db.ForeignKey('menu_item_types.id'), nullable=False)
+    menu = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
+
+    menus = db.relationship("Menu", back_populates='items')
+    menu_types = db.relationship("MenuItemType", back_populates='menu_items')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "menu_name": self.menus.name,
+            "menu_item_name": self.menu_types.name,
+            "price": self.price,
+            "type": self.type
+        }
+
+class MenuItemType(db.Model):
+    __tablename__ = 'menu_item_types'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(20), nullable=False)
+
+    menu_items = db.relationship("MenuItem", back_populates='menu_types')
